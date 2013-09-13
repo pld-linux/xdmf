@@ -1,0 +1,16 @@
+Description: Add a soname to the libXdmf.so.2.1 library
+Author: Alastair McKinstry <mckinstry@debian.org>
+Last-Updated: 2011-06-20
+Forwarded: not-needed
+
+--- xdmf-2.1.orig/libsrc/CMakeLists.txt
++++ xdmf-2.1/libsrc/CMakeLists.txt
+@@ -417,6 +417,8 @@ ENDIF(VTK_BUILD_SHARED_LIBS OR BUILD_SHA
+ 
+ ADD_LIBRARY(Xdmf ${LIBTYPE} ${XdmfSources})
+ 
++SET_TARGET_PROPERTIES(Xdmf PROPERTIES  SOVERSION 2)
++
+ IF(XDMF_USE_MYSQL)
+     ADD_DEFINITIONS("-DXDMF_USE_MYSQL")
+     INCLUDE_DIRECTORIES(${MYSQL_INCLUDE_PATH})

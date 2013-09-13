@@ -1,0 +1,55 @@
+--- Xdmf/Utilities/metis/util.c.orig	2010-03-24 21:03:47.000000000 +0100
++++ Xdmf/Utilities/metis/util.c	2013-09-13 17:11:43.511029060 +0200
+@@ -509,7 +509,7 @@ void InitRandom(int seed)
+ /*************************************************************************
+ * This function returns the log2(x)
+ **************************************************************************/
+-int log2(int a)
++int intlog2(int a)
+ {
+   int i;
+ 
+--- Xdmf/Utilities/metis/rename.h.orig	2010-03-24 21:03:47.000000000 +0100
++++ Xdmf/Utilities/metis/rename.h	2013-09-13 17:12:24.884360419 +0200
+@@ -410,7 +410,7 @@
+ #define RandomPermute			__RandomPermute
+ #define ispow2				__ispow2
+ #define InitRandom			__InitRandom
+-#define log2				__log2
++#define intlog2				__intlog2
+ 
+ 
+ 
+--- Xdmf/Utilities/metis/kmetis.c.orig	2010-03-24 21:03:47.000000000 +0100
++++ Xdmf/Utilities/metis/kmetis.c	2013-09-13 17:12:59.174358871 +0200
+@@ -66,7 +66,7 @@ void METIS_WPartGraphKway(int *nvtxs, id
+     ctrl.dbglvl = options[OPTION_DBGLVL];
+   }
+   ctrl.optype = OP_KMETIS;
+-  ctrl.CoarsenTo = amax((*nvtxs)/(40*log2(*nparts)), 20*(*nparts));
++  ctrl.CoarsenTo = amax((*nvtxs)/(40*intlog2(*nparts)), 20*(*nparts));
+   ctrl.maxvwgt = 1.5*((graph.vwgt ? idxsum(*nvtxs, graph.vwgt) : (*nvtxs))/ctrl.CoarsenTo);
+ 
+   InitRandom(-1);
+--- Xdmf/Utilities/metis/kvmetis.c.orig	2010-03-24 21:03:47.000000000 +0100
++++ Xdmf/Utilities/metis/kvmetis.c	2013-09-13 17:13:06.084358658 +0200
+@@ -66,7 +66,7 @@ void METIS_WPartGraphVKway(int *nvtxs, i
+     ctrl.dbglvl = options[OPTION_DBGLVL];
+   }
+   ctrl.optype = OP_KVMETIS;
+-  ctrl.CoarsenTo = amax((*nvtxs)/(40*log2(*nparts)), 20*(*nparts));
++  ctrl.CoarsenTo = amax((*nvtxs)/(40*intlog2(*nparts)), 20*(*nparts));
+   ctrl.maxvwgt = 1.5*((graph.vwgt ? idxsum(*nvtxs, graph.vwgt) : (*nvtxs))/ctrl.CoarsenTo);
+ 
+   InitRandom(-1);
+--- Xdmf/Utilities/metis/mkmetis.c.orig	2010-03-24 21:03:47.000000000 +0100
++++ Xdmf/Utilities/metis/mkmetis.c	2013-09-13 17:13:17.037691588 +0200
+@@ -47,7 +47,7 @@ void METIS_mCPartGraphKway(int *nvtxs, i
+     ctrl.dbglvl = options[OPTION_DBGLVL];
+   }
+   ctrl.optype = OP_KMETIS;
+-  ctrl.CoarsenTo = amax((*nvtxs)/(20*log2(*nparts)), 30*(*nparts));
++  ctrl.CoarsenTo = amax((*nvtxs)/(20*intlog2(*nparts)), 30*(*nparts));
+ 
+   ctrl.nmaxvwgt = 1.5/(1.0*ctrl.CoarsenTo);
+ 
