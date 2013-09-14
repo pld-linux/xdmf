@@ -25,6 +25,8 @@ Patch0:		%{name}-include.patch
 Patch1:		%{name}-soname.patch
 Patch2:		%{name}-log2.patch
 Patch3:		%{name}-destdir.patch
+Patch4:		%{name}-format.patch
+Patch5:		%{name}-lib.patch
 URL:		http://www.xdmf.org/
 BuildRequires:	bzip2-devel
 BuildRequires:	cmake >= 2.4
@@ -79,6 +81,8 @@ Pythonowy interfejs do biblioteki Xdmf.
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
+%patch4 -p1
+%patch5 -p1
 
 %build
 mkdir build

@@ -1,0 +1,20 @@
+--- Xdmf/Utilities/metis/util.c.orig	2013-09-13 21:24:12.598895465 +0200
++++ Xdmf/Utilities/metis/util.c	2013-09-14 07:03:03.775021464 +0200
+@@ -20,15 +20,14 @@
+ void errexit(char *f_str,...)
+ {
+   va_list argp;
+-  char out1[256], out2[256];
++  char out1[256];
+ 
+   va_start(argp, f_str);
+   vsprintf(out1, f_str, argp);
+   va_end(argp);
+ 
+-  sprintf(out2, "Error! %s", out1);
++  fprintf(stdout, "Error! %s", out1);
+ 
+-  fprintf(stdout, out2);
+   fflush(stdout);
+ 
+   abort();
