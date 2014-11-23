@@ -8,13 +8,14 @@
 %bcond_with	mpi	# MPI support
 %bcond_with	utils	# build XdmfUtils (see TODO above)
 #
+%define		rel 2
 Summary:	eXtensible Data Model and Format library
 Summary(pl.UTF-8):	Biblioteka rozszerzalnego modelu i formatu danych (XDMF)
 Name:		xdmf
 # Debian says 2.1, but no version information anywhere in sources/CVS
 Version:	0
 %define	snap	20100330
-Release:	0.%{snap}.1
+Release:	0.%{snap}.%{rel}
 # specified in libsrc/{gzstream,bz2stream}.*
 License:	LGPL v2.1+
 Group:		Libraries
