@@ -8,7 +8,7 @@
 %bcond_with	mpi	# MPI support
 %bcond_with	utils	# build XdmfUtils (see TODO above)
 #
-%define		rel 2
+%define		rel 3
 Summary:	eXtensible Data Model and Format library
 Summary(pl.UTF-8):	Biblioteka rozszerzalnego modelu i formatu danych (XDMF)
 Name:		xdmf
@@ -89,7 +89,8 @@ Pythonowy interfejs do biblioteki Xdmf.
 mkdir build
 cd build
 %cmake .. \
-	-DPythonLibs_FIND_VERSION=%{py_ver} \
+	-DPythonLibs_FIND_VERSION=2 \
+	-DPythonLibs_FIND_VERSION_MAJOR=2 \
 	%{!?with_mpi:-DXDMF_BUILD_MPI=OFF} \
 	%{?with_utils:-DXDMF_BUILD_UTILS=ON} \
 	-DXDMF_SYSTEM_HDF5=ON \
