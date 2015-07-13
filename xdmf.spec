@@ -8,7 +8,7 @@
 %bcond_with	mpi	# MPI support
 %bcond_with	utils	# build XdmfUtils (see TODO above)
 #
-%define		rel 3
+%define		rel 4
 Summary:	eXtensible Data Model and Format library
 Summary(pl.UTF-8):	Biblioteka rozszerzalnego modelu i formatu danych (XDMF)
 Name:		xdmf
