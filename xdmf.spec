@@ -1,42 +1,44 @@
-# TODO: MPI
-# fix utils:
-# - installs libmetis conflicting with system metis
-# - wants preinstalled libvtk{NetCDF,exoIIc} or installs own versions
-# - installs headers to /usr/include/utils/Xdmf* (too generic dir name)
+# TODO: parallel (MPI, MPI4PY, H5FDdsm)?
+# - use exodusii
+# - python3 module
+# - system loki library?
 #
 # Conditional build:
+%bcond_without	apidocs	# Doxygen docs
+%bcond_without	fortran	# Fortran support in XdmfUtils
+%bcond_without	metis	# Metis partitioner in XdmfUtils
 %bcond_with	mpi	# MPI support
-%bcond_with	utils	# build XdmfUtils (see TODO above)
+%bcond_without	java	# Java wrappers
+%bcond_without	python	# Python wrappers
 #
-%define		rel 5
 Summary:	eXtensible Data Model and Format library
 Summary(pl.UTF-8):	Biblioteka rozszerzalnego modelu i formatu danych (XDMF)
 Name:		xdmf
-# Debian says 2.1, but no version information anywhere in sources/CVS
-Version:	0
-%define	snap	20100330
+# see CMakeLists.txt /XDMF_VERSION
+Version:	3.0.0
+%define	gitref	8d9c98081d89ac77a132d56bc8bef53581db4078
+%define	snap	20190115
+%define	rel	1
 Release:	0.%{snap}.%{rel}
-# specified in libsrc/{gzstream,bz2stream}.*
-License:	LGPL v2.1+
+License:	BSD-like
 Group:		Libraries
-# cvs -d :pserver:anonymous:xdmf@public.kitware.com:/cvsroot/Xdmf co Xdmf
-Source0:	%{name}.tar.xz
-# Source0-md5:	63f99d11bea8d56d4185cb8facd44ca2
-Patch0:		%{name}-include.patch
-Patch1:		%{name}-soname.patch
-Patch2:		%{name}-log2.patch
-Patch3:		%{name}-destdir.patch
-Patch4:		%{name}-format.patch
-Patch5:		%{name}-lib.patch
+Source0:	https://gitlab.kitware.com/xdmf/xdmf/-/archive/%{gitref}/xdmf-%{snap}.tar.bz2
+# Source0-md5:	32fbbd1f6b584e27bb5a30945f6b787a
+Patch0:		%{name}-swig.patch
 URL:		http://www.xdmf.org/
 BuildRequires:	bzip2-devel
+BuildRequires:	boost-devel
 BuildRequires:	cmake >= 2.4
 BuildRequires:	hdf5-devel >= 1.8
+%{?with_java:BuildRequires:	jdk}
 BuildRequires:	libstdc++-devel
+BuildRequires:	libtiff-devel
 BuildRequires:	libxml2-devel >= 2
-BuildRequires:	python-devel >= 2
+%{?with_python:BuildRequires:	python-devel >= 2}
 BuildRequires:	rpm-pythonprov
 BuildRequires:	rpmbuild(macros) >= 1.219
+%{?with_java:BuildRequires:	swig >= 2.0.0}
+%{?with_python:BuildRequires:	swig-python >= 2.0.0}
 BuildRequires:	tar >= 1:1.22
 BuildRequires:	xz
 BuildRequires:	zlib-devel
@@ -64,6 +66,18 @@ Header files for Xdmf library.
 %description devel -l pl.UTF-8
 Pliki nagłówkowe biblioteki Xdmf.
 
+%package -n java-xdmf
+Summary:	Java binding for Xdmf library
+Summary(pl.UTF-8):	Interfejs Javy do biblioteki Xdmf
+Group:		Libraries/Python
+Requires:	%{name} = %{version}-%{release}
+
+%description -n java-xdmf
+Java binding for Xdmf library.
+
+%description -n java-xdmf -l pl.UTF-8
+Interfejs Javy do biblioteki Xdmf.
+
 %package -n python-xdmf
 Summary:	Python binding for Xdmf library
 Summary(pl.UTF-8):	Pythonowy interfejs do biblioteki Xdmf
@@ -77,27 +91,26 @@ Python binding for Xdmf library.
 Pythonowy interfejs do biblioteki Xdmf.
 
 %prep
-%setup -q -n Xdmf
+%setup -q -n %{name}-%{gitref}
 %patch0 -p1
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
-%patch5 -p1
 
 %build
 mkdir build
 cd build
 %cmake .. \
-	-DPythonLibs_FIND_VERSION=2 \
-	-DPythonLibs_FIND_VERSION_MAJOR=2 \
+	-DREQUESTED_PYTHON_VERSION=2 \
+	%{?with_apidocs:-DXDMF_BUILD_DOCUMENTATION=ON} \
+	%{?with_fortran:-DXDMF_BUILD_FORTRAN=ON} \
 	%{!?with_mpi:-DXDMF_BUILD_MPI=OFF} \
-	%{?with_utils:-DXDMF_BUILD_UTILS=ON} \
+	%{?with_metis:-DXDMF_BUILD_PARTITIONER=ON} \
+	-DXDMF_BUILD_UTILS=ON \
 	-DXDMF_SYSTEM_HDF5=ON \
 	-DXDMF_SYSTEM_LIBXML2=ON \
 	-DXDMF_SYSTEM_ZLIB=ON \
 	-DXDMF_USE_RPATH=OFF \
-	-DXDMF_WRAP_PYTHON=ON
+	%{?with_java:-DXDMF_WRAP_JAVA=ON} \
+	%{?with_python:-DXDMF_WRAP_PYTHON=ON}
+# TODO: -DXDMF_BUILD_EXODUS_IO=ON BR: Exodus-devel
 
 %{__make}
 
@@ -107,9 +120,11 @@ rm -rf $RPM_BUILD_ROOT
 %{__make} -C build install \
 	DESTDIR=$RPM_BUILD_ROOT
 
-# cmake compiles only to .pyc
+%if %{with python}
+%py_comp $RPM_BUILD_ROOT%{py_sitedir}
 %py_ocomp $RPM_BUILD_ROOT%{py_sitedir}
 %py_postclean
+%endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -119,42 +134,51 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/libXdmf.so.2
-%if %{with utils}
-%attr(755,root,root) %{_libdir}/libXdmfUtils.so
-%attr(755,root,root) %{_libdir}/libmetis.so
-%attr(755,root,root) %{_libdir}/libvtkNetCDF.so
-%attr(755,root,root) %{_libdir}/libvtkexoIIc.so
-%attr(755,root,root) %{_bindir}/XdmfDiff
-%attr(755,root,root) %{_bindir}/XdmfExodusConverter
+%doc Copyright.txt README.md
+%if %{with metis}
 %attr(755,root,root) %{_bindir}/XdmfPartitioner
 %endif
+%attr(755,root,root) %{_libdir}/libXdmf.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libXdmf.so.3
+%attr(755,root,root) %{_libdir}/libXdmfCore.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libXdmfCore.so.3
+%attr(755,root,root) %{_libdir}/libXdmfUtils.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libXdmfUtils.so.3
 
 %files devel
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_libdir}/libXdmf.so
-%{_libdir}/XdmfCMake
-%{_includedir}/Xdmf*.h
-%{_includedir}/bz2stream.h
-%{_includedir}/gzstream.h
-%if %{with utils}
-%{_includedir}/XdmfSTLConverter.txx
-# FIXME: too generic dir
-%dir %{_includedir}/utils
-%{_includedir}/utils/Xdmf*.h
-# FIXME: conflict with system metis
-%{_includedir}/metis
-%{_includedir}/vtkexodus2
-%{_includedir}/vtknetcdf
+%attr(755,root,root) %{_libdir}/libXdmfCore.so
+%attr(755,root,root) %{_libdir}/libXdmfUtils.so
+%{_libdir}/cmake/Xdmf
+%{_includedir}/ProjectVersion.hpp
+%{_includedir}/Xdmf*.hpp
+%{_includedir}/Xdmf*.i
+%{_includedir}/XdmfArray.tpp
+%{_includedir}/loki
+%if %{with fortran}
+%{_includedir}/Xdmf.f
 %endif
 
+%if %{with java}
+%files -n java-xdmf
+%defattr(644,root,root,755)
+%{_libdir}/java/Xdmf.jar
+%{_libdir}/java/XdmfCore.jar
+%{_libdir}/java/XdmfUtils.jar
+%attr(755,root,root) %{_libdir}/java/libXdmfJava.so
+%attr(755,root,root) %{_libdir}/java/libXdmfCoreJava.so
+%attr(755,root,root) %{_libdir}/java/libXdmfUtilsJava.so
+%endif
+
+%if %{with python}
 %files -n python-xdmf
 %defattr(644,root,root,755)
-%dir %{py_sitedir}/Xdmf
-%attr(755,root,root) %{py_sitedir}/Xdmf/_Xdmf.so
-%{py_sitedir}/Xdmf/Xdmf.py[co]
-%{py_sitedir}/Xdmf/__init__.py[co]
-%if %{with utils}
-%attr(755,root,root) %{py_sitedir}/Xdmf/_XdmfUtils.so
-%{py_sitedir}/Xdmf/XdmfUtils.py[co]
+%dir %{py_sitedir}/xdmf
+%attr(755,root,root) %{py_sitedir}/xdmf/_Xdmf.so
+%attr(755,root,root) %{py_sitedir}/xdmf/_XdmfCore.so
+%attr(755,root,root) %{py_sitedir}/xdmf/_XdmfUtils.so
+%{py_sitedir}/xdmf/Xdmf.py[co]
+%{py_sitedir}/xdmf/XdmfCore.py[co]
+%{py_sitedir}/xdmf/XdmfUtils.py[co]
 %endif

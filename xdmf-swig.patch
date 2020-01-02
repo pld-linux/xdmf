@@ -1,0 +1,85 @@
+--- xdmf-8d9c98081d89ac77a132d56bc8bef53581db4078/CMakeLists.txt.orig	2019-01-14 21:18:11.000000000 +0100
++++ xdmf-8d9c98081d89ac77a132d56bc8bef53581db4078/CMakeLists.txt	2019-12-26 20:18:56.479467552 +0100
+@@ -116,7 +116,7 @@
+     set(CMAKE_SWIG_OUTDIR ${CMAKE_BINARY_DIR})
+     # optimize swig generation --- these are all flags corresponding to -O
+     # except -fvirtual which breaks visitor operation
+-    set(CMAKE_SWIG_FLAGS ${XDMF_SWIG_FLAGS} -modern -fastdispatch -nosafecstrings -noproxydel -fastproxy -fastinit -fastunpack -fastquery -modernargs -nobuildnone)
++    set(CMAKE_SWIG_FLAGS ${XDMF_SWIG_FLAGS} -fastdispatch -fastproxy)
+     #Enables DSM
+     if (XDMF_BUILD_DSM)
+       set(CMAKE_SWIG_FLAGS ${CMAKE_SWIG_FLAGS} -DXDMF_BUILD_DSM)
+@@ -158,7 +158,7 @@
+ 
+     set(
+       PYTHON_INSTALL_DIR
+-      ${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/xdmf
++      ${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/xdmf
+       )
+ 
+     string(TOUPPER ${python_name} python_name_upper)
+@@ -170,7 +170,7 @@
+         PARENT_SCOPE)
+     endif()
+ 
+-    install(FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${python_name}.py
++    install(FILES ${CMAKE_BINARY_DIR}/${python_name}.py
+       DESTINATION ${PYTHON_INSTALL_DIR})
+     install(TARGETS ${SWIG_MODULE_${python_name}Python_REAL_NAME}
+       DESTINATION ${PYTHON_INSTALL_DIR})
+#--- xdmf-8d9c98081d89ac77a132d56bc8bef53581db4078/CMakeLists.txt.orig	2019-12-31 19:20:24.581481687 +0100
+#+++ xdmf-8d9c98081d89ac77a132d56bc8bef53581db4078/CMakeLists.txt	2020-01-01 17:57:37.662906442 +0100
+#@@ -221,7 +221,7 @@
+#     add_custom_target(Compiled_${java_name}_Jar ALL DEPENDS
+#       ${${java_name}_JAVA_JAR})
+#     add_custom_command(OUTPUT ${${java_name}_JAVA_JAR}
+#-      COMMAND ${CMAKE_COMMAND} -E chdir ${XDMF_JAVA_PACKAGE_DIR}
+#+	    COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_SWIG_OUTDIR}
+#               ${JAVA_COMPILE} -cp \".${java_cp_jars}\" ${java_files}
+#       COMMAND ${JAVA_ARCHIVE} -cvf ${${java_name}_JAVA_JAR}
+#              "${XDMF_JAVA_PACKAGE_DIR}/*.class")
+--- xdmf-8d9c98081d89ac77a132d56bc8bef53581db4078/Xdmf.i.orig	2019-01-14 21:18:11.000000000 +0100
++++ xdmf-8d9c98081d89ac77a132d56bc8bef53581db4078/Xdmf.i	2020-01-02 19:38:20.022103199 +0100
+@@ -1054,6 +1054,7 @@
+ %ignore XdmfSet::getAttribute(const std::string &) const;
+ 
+ // Ignore ItemTags
++%ignore XdmfAggregate::ItemTag;
+ %ignore XdmfAttribute::ItemTag;
+ %ignore XdmfCurvilinearGrid::ItemTag;
+ %ignore XdmfDomain::ItemTag;
+--- xdmf-8d9c98081d89ac77a132d56bc8bef53581db4078/core/XdmfCore.i.orig	2019-12-31 19:20:24.584815002 +0100
++++ xdmf-8d9c98081d89ac77a132d56bc8bef53581db4078/core/XdmfCore.i	2020-01-02 19:39:24.755085844 +0100
+@@ -429,7 +429,10 @@
+ 
+ // Ignore ItemTags
+ %ignore XdmfArray::ItemTag;
++%ignore XdmfFunction::ItemTag;
+ %ignore XdmfInformation::ItemTag;
++%ignore XdmfSparseMatrix::ItemTag;
++%ignore XdmfSubset::ItemTag;
+ 
+ // Define equality operators
+ %extend XdmfItem {
+@@ -1272,6 +1275,7 @@
+ %include std_string.i
+ %include std_vector.i
+ %include std_map.i
++%include std_pair.i
+ 
+ %shared_ptr(Loki::BaseVisitor)
+ %shared_ptr(Loki::BaseVisitable<void>)
+--- xdmf-8d9c98081d89ac77a132d56bc8bef53581db4078/CMakeLists.txt.orig	2020-01-02 20:37:35.359508950 +0100
++++ xdmf-8d9c98081d89ac77a132d56bc8bef53581db4078/CMakeLists.txt	2020-01-02 20:38:28.862552433 +0100
+@@ -195,9 +195,9 @@
+   #     Target Name     = the output target name will have ${java_name}Java as its name
+   #     Target Jar      = the output target jar will have ${java_name}Java.jar as its name
+   macro(XDMF_SWIG_JAVA java_name)
+-    set(${java_name}_JAVA_JAR ${CMAKE_BINARY_DIR}/${java_name}.jar)
++    set(${java_name}_JAVA_JAR ${CMAKE_CURRENT_BINARY_DIR}/${java_name}.jar)
+     set(XDMF_JAVA_PACKAGE_DIR mil/army/arl/xdmf)
+-    set(XDMF_JAVA_DIR ${CMAKE_BINARY_DIR}/${XDMF_JAVA_PACKAGE_DIR})
++    set(XDMF_JAVA_DIR ${CMAKE_CURRENT_BINARY_DIR}/${XDMF_JAVA_PACKAGE_DIR})
+     set(CMAKE_SWIG_OUTDIR ${XDMF_JAVA_DIR})
+     set(CMAKE_SWIG_FLAGS ${XDMF_SWIG_FLAGS} -v -make_default -package mil.army.arl.xdmf)
+     set_source_files_properties(${java_name}.i PROPERTIES CPLUSPLUS ON)
